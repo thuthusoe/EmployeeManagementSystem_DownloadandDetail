@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+    "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper
+	namespace="employee.domain.repository.employee.EmployeeRepository">
+
+	<resultMap id="employeeResultMap" type="Employee">
+		<id property="employeeId" column="employee_id" />
+		<result property="employeeName" column="employee_name" />
+		<result property="birthdate" column="birthdate" />
+		<result property="gender" column="gender" />
+		<result property="maritalStatus" column="marital_status" />
+		<result property="levelName" column="level_name" />
+		<result property="departmentName" column="department_name" />
+		<result property="joinDate" column="join_date" />
+		<result property="positionName" column="position_name" />
+		<result property="email" column="email" />
+		<result property="phone" column="phone" />
+	</resultMap>
+	<!-- <resultMap id="uploadFileInfoResultMap" type="UploadFileInfo">
+		<id property="fileId" column="file_id" />
+		<result property="fileName" column="file_name" />
+		<result property="description" column="description" />
+		<result property="employeeId" column="employee_id" />
+	</resultMap>	 -->
+	
+	<select id="search" parameterType="string" resultMap="employeeResultMap">
+    <![CDATA[
+	SELECT 
+		EMPLOYEE_ID, 
+		EMPLOYEE_NAME, 
+		BIRTHDATE, GENDER, 
+		MARITAL_STATUS, 
+		LEVEL_NAME,
+		Emp.LEVEL_ID, 
+		DEPARTMENT_NAME, 
+		Emp.DEPARTMENT_ID,
+		JOIN_DATE, 
+		POSITION_NAME, 
+		Emp.POSITION_ID, 
+		EMAIL, 
+		PHONE FROM EMPLOYEE AS Emp
+		INNER JOIN JAPANESE_LEVEL AS Jap ON Emp.LEVEL_ID = Jap.LEVEL_ID 
+		INNER JOIN DEPARTMENT AS Dep ON Emp.DEPARTMENT_ID = Dep.DEPARTMENT_ID
+		INNER JOIN POSITION AS Pos ON Emp.POSITION_ID = Pos.POSITION_ID
+		where employee_id = #{searchCondition}
+		OR employee_name = #{searchCondition} 
+		ORDER BY
+		Emp.EMPLOYEE_ID
+		LIMIT
+		10
+		OFFSET
+		0
+		;
+	]]>
+	</select>
+
+	<select id="findOne" parameterType="string"
+		resultMap="employeeResultMap">
+    <![CDATA[
+       SELECT 
+		EMPLOYEE_ID, 
+		EMPLOYEE_NAME, 
+		BIRTHDATE, GENDER, 
+		MARITAL_STATUS, 
+		LEVEL_NAME, 
+		DEPARTMENT_NAME, 
+		JOIN_DATE, 
+		POSITION_NAME, 
+		EMAIL, 
+		PHONE FROM EMPLOYEE AS Emp
+		INNER JOIN JAPANESE_LEVEL AS Jap ON Emp.LEVEL_ID = Jap.LEVEL_ID 
+		INNER JOIN DEPARTMENT AS Dep ON Emp.DEPARTMENT_ID = Dep.DEPARTMENT_ID
+		INNER JOIN POSITION AS Pos ON Emp.POSITION_ID = Pos.POSITION_ID 
+		where employee_id = #{employeeId};
+    ]]>
+	</select>
+
+	<select id="findAll" resultMap="employeeResultMap">
+    <![CDATA[
+	SELECT 
+		EMPLOYEE_ID, 
+		EMPLOYEE_NAME, 
+		BIRTHDATE, GENDER, 
+		MARITAL_STATUS, 
+		LEVEL_NAME, 
+		Emp.LEVEL_ID,
+		DEPARTMENT_NAME, 
+		Emp.DEPARTMENT_ID,
+		JOIN_DATE, 
+		POSITION_NAME, 
+		Emp.POSITION_ID, 
+		EMAIL, 
+		PHONE FROM EMPLOYEE AS Emp
+		INNER JOIN JAPANESE_LEVEL AS Jap ON Emp.LEVEL_ID = Jap.LEVEL_ID 
+		INNER JOIN DEPARTMENT AS Dep ON Emp.DEPARTMENT_ID = Dep.DEPARTMENT_ID
+		INNER JOIN POSITION AS Pos ON Emp.POSITION_ID = Pos.POSITION_ID
+		ORDER BY
+		Emp.EMPLOYEE_ID
+		LIMIT
+		#{pageable.pageSize}
+		OFFSET
+		#{pageable.offset}
+		;
+
+    ]]>
+	</select>
+
+<!-- 	<insert id="createFile" parameterType="UploadFileInfo">
+    <![CDATA[
+    INSERT INTO FILE 
+		(FILE_ID, 
+		FILE_NAME, 
+		DESCRIPTION, 
+		EMPLOYEE_ID) 
+ 		VALUES 
+ 		(#{fileId}, 
+  		#{fileName}, 
+ 		 #{description}, 
+ 		 #{employeeId});
+    ]]>
+	</insert>  -->
+	
+	<insert id="create" parameterType="Employee">
+    <![CDATA[
+    UPDATE EMPLOYEE SET 	
+			EMPLOYEE_NAME=#{employeeName}, 
+	        BIRTHDATE=to_date(#{birthdate}, 'YYYY/MM/DD'), 
+			GENDER =#{gender}, 
+		   	MARITAL_STATUS =#{maritalStatus}, 
+			LEVEL_ID = #{levelId}::INTEGER, 
+			DEPARTMENT_ID=#{departmentId}::INTEGER, 
+		    JOIN_DATE=to_date(#{joinDate}, 'YYYY/MM/DD'), 
+			POSITION_ID=#{positionId}::INTEGER, 
+			EMAIL=#{email}, 
+			PHONE=#{phone}
+			WHERE EMPLOYEE_ID=#{employeeId};
+INSERT INTO EMPLOYEE 
+(EMPLOYEE_ID, 
+EMPLOYEE_NAME,
+BIRTHDATE, 
+GENDER, 
+MARITAL_STATUS, 
+LEVEL_ID, 
+DEPARTMENT_ID, 
+JOIN_DATE, 
+POSITION_ID, 
+EMAIL, 
+PHONE)
+       SELECT 
+       #{employeeId}, 
+       #{employeeName}, 
+       to_date(#{birthdate}, 'YYYY/MM/DD'), 
+       #{gender},
+       #{maritalStatus}, 
+       #{levelId}::INTEGER, 
+	   #{departmentId}::INTEGER,
+	   to_date(#{joinDate},  'YYYY/MM/DD'),
+	   #{positionId}::INTEGER,
+	   #{email},
+	   #{phone}
+       WHERE NOT EXISTS (SELECT 1 FROM EMPLOYEE WHERE EMPLOYEE_ID=#{employeeId});
+    
+    ]]>
+	</insert>
+
+	<delete id="delete" parameterType="String">
+    <![CDATA[
+        DELETE FROM EMPLOYEE 
+        WHERE
+            employee_id = #{employeeId}
+    ]]>
+	</delete>
+	
+	<select id="countById"
+		parameterType="string"  resultType="long">
+	<![CDATA[	
+		SELECT
+		COUNT(*)
+		FROM
+		employee
+		where employee_id = #{searchCondition} 
+		OR employee_name = #{searchCondition}
+		;
+	]]>	
+	</select>
+	
+	<select id="count" resultType="_long">
+		SELECT
+		COUNT(*)
+		FROM
+		employee
+	</select>
+</mapper>
